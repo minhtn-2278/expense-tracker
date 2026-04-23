@@ -1,0 +1,72 @@
+# Supabase local stack configuration for the Expense Tracker.
+# See https://supabase.com/docs/guides/local-development/cli/config
+#
+# Values chosen to match spec clarifications:
+#   - No email confirmation (Q1: accounts usable immediately).
+#   - No password reset flow (Q2: out of scope).
+#   - 30 days rolling session (Q3: session_inactivity_timeout = 720h).
+
+project_id = "expense-tracker"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://127.0.0.1"
+
+[inbucket]
+enabled = true
+port = 54324
+
+[storage]
+enabled = false
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["http://127.0.0.1:3000"]
+jwt_expiry = 3600
+enable_signup = true
+enable_anonymous_sign_ins = false
+enable_manual_linking = false
+
+# 30-day rolling inactivity window per spec FR-006 / clarification Q3.
+# `inactivity_timeout` = session expires after 720h (30 days) with no
+# authenticated activity. Supabase Auth already renews the session on each
+# request, so "rolling" behaviour is implicit — there is no separate flag.
+# `timebox` sets an absolute cap regardless of activity; we match it to the
+# inactivity window so neither side is more permissive than the spec.
+[auth.sessions]
+timebox = "720h"
+inactivity_timeout = "720h"
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+# Q1: no email verification before first login.
+enable_confirmations = false
+# Q2: password reset is out of scope — require current password when changing
+# so there is no silent reset path.
+secure_password_change = true
+
+[auth.sms]
+enable_signup = false
+enable_confirmations = false
+
+# No external OAuth providers in v1.
+[auth.external.apple]
+enabled = false
+
+[auth.external.google]
+enabled = false

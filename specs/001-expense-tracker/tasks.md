@@ -22,17 +22,17 @@ description: "Task list for feature 001-expense-tracker — Simple Expense Track
 
 **Purpose**: Bring up the empty Next.js + Supabase skeleton the rest of the work will build on.
 
-- [ ] T001 Initialise pnpm Next.js 15 app with TypeScript at repo root: `pnpm create next-app@latest . --ts --tailwind --app --eslint --src-dir=false --import-alias="@/*"`, then delete generated boilerplate pages.
-- [ ] T002 Install runtime dependencies: `pnpm add @supabase/ssr @supabase/supabase-js zod react-hook-form @hookform/resolvers date-fns date-fns-tz server-only` and dev deps `pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/jest-dom jsdom @playwright/test eslint-plugin-boundaries supabase`. Record versions in `package.json`.
-- [ ] T003 [P] Edit `tsconfig.json` to set `"strict": true`, `"noUncheckedIndexedAccess": true`, `"noImplicitOverride": true`, `"paths": { "@/*": ["./*"] }`.
-- [ ] T004 [P] Create `.eslintrc.cjs` extending Next.js defaults plus `eslint-plugin-boundaries` rule that forbids imports from `features/<a>/*` into `features/<b>/*`; zero warnings allowed (`--max-warnings=0`).
-- [ ] T005 [P] Create `prettier.config.cjs` (semi, single quotes, trailing commas) and `.editorconfig`.
-- [ ] T006 [P] Create `vitest.config.ts` (jsdom env, `@testing-library/jest-dom` in setup) and `playwright.config.ts` (base URL `http://localhost:3000`, single `chromium` project for v1).
-- [ ] T007 [P] Scaffold empty feature-first directories with `.gitkeep` files per [plan.md](./plan.md) structure: `app/(auth)`, `app/(app)`, `app/api`, `features/{auth,categories,transactions,dashboard}/{components}`, `lib/{supabase,time,utils}`, `types/`, `supabase/migrations/`, `tests/{unit,integration/{rls,actions},e2e}`.
-- [ ] T008 Initialise Supabase CLI: `supabase init`, then edit `supabase/config.toml` to set `[auth] enable_signup = true`, `enable_confirmations = false`, `session_refresh_rolling = true`, `session_inactivity_timeout = "720h"` (30 days per spec Clarification Q3). Commit.
-- [ ] T009 Create `.env.example` listing `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`; add `.env.local` to `.gitignore` (already present — verify).
-- [ ] T010 [P] Add `pnpm` scripts to `package.json`: `dev`, `build`, `start`, `lint`, `typecheck`, `format`, `test`, `test:rls`, `test:e2e`, `test:all`, `db:reset`, `db:types`, `db:new-migration` (see [quickstart.md](./quickstart.md) for exact commands).
-- [ ] T011 [P] Configure Vietnamese-subset Inter font via `next/font/google` in `app/layout.tsx` (subsets: `['latin', 'vietnamese']`) and set `<html lang="vi">`.
+- [X] T001 Initialise pnpm Next.js 15 app with TypeScript at repo root: `pnpm create next-app@latest . --ts --tailwind --app --eslint --src-dir=false --import-alias="@/*"`, then delete generated boilerplate pages.
+- [X] T002 Install runtime dependencies: `pnpm add @supabase/ssr @supabase/supabase-js zod react-hook-form @hookform/resolvers date-fns date-fns-tz server-only` and dev deps `pnpm add -D vitest @vitejs/plugin-react @testing-library/react @testing-library/jest-dom jsdom @playwright/test eslint-plugin-boundaries supabase`. Record versions in `package.json`.
+- [X] T003 [P] Edit `tsconfig.json` to set `"strict": true`, `"noUncheckedIndexedAccess": true`, `"noImplicitOverride": true`, `"paths": { "@/*": ["./*"] }`.
+- [X] T004 [P] Create `.eslintrc.cjs` extending Next.js defaults plus `eslint-plugin-boundaries` rule that forbids imports from `features/<a>/*` into `features/<b>/*`; zero warnings allowed (`--max-warnings=0`).
+- [X] T005 [P] Create `prettier.config.cjs` (semi, single quotes, trailing commas) and `.editorconfig`.
+- [X] T006 [P] Create `vitest.config.ts` (jsdom env, `@testing-library/jest-dom` in setup) and `playwright.config.ts` (base URL `http://localhost:3000`, single `chromium` project for v1).
+- [X] T007 [P] Scaffold empty feature-first directories with `.gitkeep` files per [plan.md](./plan.md) structure: `app/(auth)`, `app/(app)`, `app/api`, `features/{auth,categories,transactions,dashboard}/{components}`, `lib/{supabase,time,utils}`, `types/`, `supabase/migrations/`, `tests/{unit,integration/{rls,actions},e2e}`.
+- [X] T008 Initialise Supabase CLI: `supabase init`, then edit `supabase/config.toml` to set `[auth] enable_signup = true`, `enable_confirmations = false`, `session_refresh_rolling = true`, `session_inactivity_timeout = "720h"` (30 days per spec Clarification Q3). Commit.
+- [X] T009 Create `.env.example` listing `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`; add `.env.local` to `.gitignore` (already present — verify).
+- [X] T010 [P] Add `pnpm` scripts to `package.json`: `dev`, `build`, `start`, `lint`, `typecheck`, `format`, `test`, `test:rls`, `test:e2e`, `test:all`, `db:reset`, `db:types`, `db:new-migration` (see [quickstart.md](./quickstart.md) for exact commands).
+- [X] T011 [P] Configure Vietnamese-subset Inter font via `next/font/google` in `app/layout.tsx` (subsets: `['latin', 'vietnamese']`) and set `<html lang="vi">`.
 
 **Checkpoint**: `pnpm dev` boots an empty Next.js app; `pnpm lint && pnpm typecheck` pass on the empty scaffold; `supabase start` brings up Postgres + Auth + Studio.
 
