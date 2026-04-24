@@ -25,9 +25,11 @@ URL params), and feature-first source organization per the constitution.
 `@supabase/supabase-js`, Zod, Tailwind CSS v4, shadcn/ui (Radix + Tailwind),
 `date-fns` + `date-fns-tz`, `react-hook-form` + `@hookform/resolvers/zod`
 **Storage**: Supabase (managed PostgreSQL) with Row-Level Security; Supabase Auth
-**Testing**: Vitest + `@testing-library/react` for unit / component; Playwright for
-E2E on the three user-story flows; dedicated RLS integration tests that query as
-user A and assert zero rows of user B (run against a throwaway schema)
+**Testing**: Vitest + `@testing-library/react` for unit / component; Playwright
+for E2E on the three user-story flows; Server Actions exercised with a mocked
+Supabase client. RLS correctness verified **manually** via the checklist in
+`supabase/RLS-VERIFY.md` (see [research.md §8](./research.md)) — no automated
+RLS suite in v1, revisit when product scales
 **Target Platform**: Deployed to Vercel (Node 20 serverless runtime); clients are
 evergreen browsers (last 2 versions of Chrome, Edge, Firefox, Safari) on desktop
 and mobile widths
@@ -57,6 +59,7 @@ Reviewed against `.specify/memory/constitution.md` v1.0.0.
 | III. Next.js Best Practices (App Router First) | Yes | Server Components by default; all mutations via Server Actions or Route Handlers; `"use client"` marked only on `TransactionForm`, `FiltersBar`, and other interactive leaves; `loading.tsx` + `error.tsx` per route segment; `next/image`, `next/font`, `next/link` used. |
 | IV. Supabase Best Practices (RLS is Non-Negotiable) | Yes | Every table (`categories`, `transactions`) has RLS enabled with explicit `SELECT / INSERT / UPDATE / DELETE` policies keyed on `auth.uid() = owner`; service-role key only in `lib/supabase/service-role.ts` gated by `"server-only"`; schema changes land as migrations; typed DB via `supabase gen types`. |
 | V. Type Safety & Validation at Boundaries | Yes | `strict: true`, `noUncheckedIndexedAccess: true`; every Server Action / Route Handler parses its input with a Zod schema before any logic runs; derived types (`z.infer`) used throughout, no duplicated shapes. |
+| VI. Test-Driven Development (NON-NEGOTIABLE) | Yes (from Phase 4 onward) | Phases 1–3 are explicitly grandfathered by the constitution (written before Principle VI was ratified). Phases 4 (US2 Dashboard), 5 (US3 Search/Export), and 6 (Polish) follow Red-Green-Refactor: `tasks.md` interleaves each test task with its implementation counterpart so tests land and fail before code lands. Migrations + RLS policies remain exempt per §VI and are verified through [supabase/RLS-VERIFY.md](../../supabase/RLS-VERIFY.md). |
 
 **Result**: PASS. No Complexity Tracking entries required.
 
@@ -155,7 +158,7 @@ supabase/
 │   ├── 0002_rls.sql                        # RLS enable + policies
 │   ├── 0003_seed_defaults_on_signup.sql    # trigger: insert default categories
 │   └── 0004_dashboard_rpc.sql              # aggregation SQL function
-├── seed.sql                     # local dev seed
+├── RLS-VERIFY.md                # manual verification checklist (see research.md §8)
 └── config.toml                  # Supabase CLI config
 
 tests/

@@ -20,7 +20,7 @@ pnpm install
 supabase start
 
 # 3. Apply migrations and seed default data
-supabase db reset         # wipes local DB, reruns migrations + seed.sql
+supabase db reset         # wipes local DB and reruns migrations from zero
 
 # 4. Copy env and fill values from the `supabase start` output
 cp .env.example .env.local
@@ -51,10 +51,13 @@ pnpm lint          # eslint — MUST pass with zero warnings before commit
 pnpm typecheck     # tsc --noEmit — MUST pass before commit
 pnpm format        # prettier --write
 
-pnpm test          # vitest (unit + component)
-pnpm test:rls      # integration suite for RLS (requires supabase start)
+pnpm test          # vitest (unit + component + action integration)
 pnpm test:e2e      # playwright e2e
 pnpm test:all      # all of the above
+#
+# Note: RLS policies are verified MANUALLY via supabase/RLS-VERIFY.md,
+# not an automated suite. Run that checklist on any PR touching
+# migrations or a table's RLS config. See research.md §8 for rationale.
 
 pnpm db:reset      # wipes + remigrates + reseeds local DB
 pnpm db:types      # regenerate types/database.ts

@@ -183,25 +183,64 @@ function of the URL.
 - Infinite scroll — adds client-side state and hurts accessibility; users of a
   financial ledger routinely want to "jump to page 12."
 
-## 8. Testing Row-Level Security
+## 8. Verifying Row-Level Security — manual checklist, not automated suite
 
-**Decision**: Dedicated RLS integration test suite in `tests/integration/rls/`
-runs against a local Supabase stack (`supabase start`). Each test signs in two
-users (A and B), performs writes as each, then queries as A and asserts it
-sees only A's rows for every table — a single parametrised spec covers
-`categories` and `transactions` plus every policy (`SELECT`, `INSERT`, `UPDATE`,
-`DELETE`). A failing test blocks merge.
+**Decision**: v1 does **not** ship an automated RLS integration test suite.
+RLS is still enforced at the database layer via the four per-operation
+policies declared in `0003_rls.sql`; however, verifying those policies is
+performed as a **documented manual checklist** (stored alongside the
+migrations) that any PR touching `supabase/migrations/**`, `auth.*`, or a
+table's RLS config MUST run before merge. Unit and component tests for
+server actions mock the Supabase client instead (since they are testing
+action logic, not policy enforcement).
 
-**Rationale**: This is the only kind of test that can detect an accidentally
-over-permissive policy; the unit tests on schemas and the E2E happy-path tests
-cannot. Running the real Supabase stack (via its CLI) rather than mocking
-guarantees we exercise actual Postgres RLS.
+**Rationale**: An earlier iteration of this doc prescribed an automated
+suite that hit a real Supabase stack (signing in fixture users A + B and
+asserting A sees no rows of B). During Phase 2 implementation we decided
+that strategy entangled dev and test databases in a way the team preferred
+to avoid — every test run either mutated dev data or required the full
+stack to be reset between runs. Alternatives were considered (transaction
+rollback per test, dedicated second stack) but the team judged the
+operational cost not worth the coverage for v1's scope. The decision is
+explicitly reversible: when the product grows, switch to
+"transaction-rollback via direct `pg` connection" (Option D in the
+review) without changing any other architecture.
 
-**Alternatives considered**:
-- pgTAP — excellent for schema assertions but awkward to wire into a Node-first
-  CI; the Supabase-CLI-based suite above gives us the same coverage with the
-  language we already have in the repo.
-- Skipping and trusting review — unacceptable given Principle IV.
+**What still enforces correctness, even without automated RLS tests**:
+
+1. Every table has four explicit per-operation policies keyed on
+   `auth.uid() = user_id`. These are reviewed on every migration PR.
+2. The `enforce_transaction_category_match` trigger provides a second
+   line of defence for cross-user category reuse.
+3. The service-role key is confined to `lib/supabase/service-role.ts`
+   under `import "server-only"`, so no client path can bypass RLS.
+4. Server actions additionally check ownership (for better error UX);
+   these are covered by the Phase 3 action-layer unit/integration tests
+   (with a mocked Supabase client).
+
+**Manual verification checklist** (must run on any PR touching RLS or
+the DB schema — tracked as task T032 and stored at
+`supabase/RLS-VERIFY.md`):
+
+1. `supabase db reset` runs cleanly from zero.
+2. Open Studio → Auth → create two users alice@local / bob@local.
+3. Open SQL editor → `set local role authenticated` + inject alice's
+   JWT claim, then `select * from categories where user_id = <bob>` → 0
+   rows. Repeat for `transactions`, `profiles`, and for each of
+   `UPDATE`/`DELETE`.
+4. Attempt `insert into transactions (user_id, ...) values (<bob>, ...)`
+   as alice → error.
+5. Record completion in PR description as "RLS manually verified per
+   `supabase/RLS-VERIFY.md`".
+
+**Alternatives considered (and rejected for v1)**:
+- Automated suite hitting live PostgREST — rejected per decision above.
+- Transaction-rollback with direct `pg` connection (Option D) — most
+  robust; rejected for v1 due to setup cost; kept as the forward path.
+- Mocking the Supabase client for RLS tests — rejected outright: a mock
+  returns whatever data you script, so "RLS tests" that use mocks
+  provide zero signal about policy correctness.
+- `pgTAP` — same operational cost as the live-stack suite; no win.
 
 ## 9. Vietnamese-only UI approach
 

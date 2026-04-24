@@ -1,23 +1,32 @@
 <!--
 SYNC IMPACT REPORT
-Version change: (none) → 1.0.0 (initial ratification)
-Modified principles: none (first version)
+Version change: 1.0.0 → 1.1.0 (MINOR — new principle added, stale reference repaired)
+Modified principles:
+  IV. Supabase Best Practices — wording tightened: RLS verification is now
+      documented as the manual checklist in supabase/RLS-VERIFY.md (replaces
+      the earlier "tests that query as user A" line, which was superseded
+      when the automated RLS suite was dropped in Phase 2).
 Added principles:
-  I. Clean & Concise Code
-  II. Clear Source Organization
-  III. Next.js Best Practices (App Router First)
-  IV. Supabase Best Practices (RLS is Non-Negotiable)
-  V. Type Safety & Validation at Boundaries
-Added sections:
-  Technology & Security Constraints
-  Development Workflow
+  VI. Test-Driven Development (NON-NEGOTIABLE)
+Added sections: none
 Removed sections: none
 Templates requiring updates:
-  ✅ .specify/templates/plan-template.md — Constitution Check gate is generic ("Gates determined based on constitution file"); reads current principles, no edits needed.
-  ✅ .specify/templates/spec-template.md — no constitution-dependent content.
-  ✅ .specify/templates/tasks-template.md — no constitution-dependent content.
-  ✅ CLAUDE.md — already points to "current plan" for context; no changes needed.
-Follow-up TODOs: none.
+  ✅ .specify/templates/tasks-template.md — already carries "Write tests
+     FIRST, ensure they FAIL before implementation" language; the new
+     principle upgrades that from "if included" to "always required" for
+     new feature + bug-fix work.
+  ✅ .specify/templates/plan-template.md — Constitution Check gate is
+     generic and re-reads the current file; no edit needed.
+  ✅ .specify/templates/spec-template.md — no constitution-dependent
+     content.
+  ✅ CLAUDE.md — already defers to the current plan; no change.
+Follow-up TODOs:
+  - specs/001-expense-tracker: Phases 1–3 were authored test-after (pre-TDD
+    era) and are explicitly grandfathered — backfill tests only when
+    modifying that code. Phase 4 (US2 Dashboard), Phase 5 (US3 Search/
+    Export), and Phase 6 (Polish) MUST follow TDD. If you re-run
+    /speckit.tasks for those phases, ensure test tasks precede their
+    implementation counterparts within each story.
 -->
 
 # Expense Tracker Constitution
@@ -99,6 +108,11 @@ hand-written types for database rows are forbidden. Authorization MUST be enforc
 the database layer (RLS) first; server-side checks are a second line of defence, never
 the only one.
 
+Verifying that RLS policies are written correctly is done per the manual checklist at
+`supabase/RLS-VERIFY.md`. Any PR that touches `supabase/migrations/**` or a table's
+RLS configuration MUST run that checklist before merge and record the verification in
+the PR description.
+
 Rationale: Supabase's security model *is* RLS. Every exception to it is a data-breach
 waiting for production traffic.
 
@@ -116,6 +130,51 @@ of the code sees; the raw input is discarded at the boundary.
 Rationale: Validation at the edge gives us one place to reason about untrusted data and
 one shape to consume throughout the app, which keeps business logic small and correct.
 
+### VI. Test-Driven Development (NON-NEGOTIABLE)
+
+Production code MUST be written through the Red-Green-Refactor cycle:
+
+1. **Red** — write a failing test that expresses the desired behaviour, and run the
+   suite to confirm it fails for the right reason (the assertion, not a missing file,
+   import typo, or compile error).
+2. **Green** — write the minimum production code that flips the new test to passing,
+   and run the full suite to confirm nothing else regressed.
+3. **Refactor** — tighten names, remove duplication, improve structure while the suite
+   stays green; add further tests for edge cases the refactor exposes.
+
+**New functional requirements** ship with at least one test written BEFORE the
+implementation and committed in the same logical step (ideally the same commit; at
+minimum the same PR). **Bug fixes** ship with a regression test written BEFORE the
+fix — the test MUST fail against the broken code, and the PR description MUST state
+which test reproduces the bug.
+
+**Exempt from strict TDD** (write tests if valuable, not required up-front):
+
+- Pure UI tweaks with no new logic (colour, spacing, copy, reordering).
+- Configuration-file changes (`tsconfig`, `eslint.config`, `package.json`
+  scripts, `next.config`).
+- Dependency version bumps.
+- Exploratory spikes explicitly labelled "throwaway" in the commit message.
+- Migrations + RLS policies — these are verified by the checklist in
+  `supabase/RLS-VERIFY.md`, not by automated tests. The application-layer code
+  consuming them still follows TDD.
+
+**Grandfathering**: code that shipped before this principle was ratified
+(specifically, Phases 1–3 of feature `001-expense-tracker`) is exempt from
+retroactive test-first discipline. Backfill tests incrementally as that code is
+modified; do not halt feature work to rewrite history.
+
+**Enforcement**: PR reviewers MUST ask, for any new feature commit: "where is the test
+that failed before this line existed?" If the author cannot point to one (or cite an
+exemption), the PR is blocked. CI MUST run the full test suite on every PR; a failing
+suite blocks merge.
+
+Rationale: Writing the test first forces the interface to be designed from the
+caller's perspective before implementation details lock it in; it bounds how much
+code is written at a time, which aligns with the "no half-finished implementations"
+rule in §I; and it guarantees a regression net that grows with the codebase rather
+than being a separate later project that never lands.
+
 ## Technology & Security Constraints
 
 - **Stack lock**: Next.js (App Router) + Supabase (Postgres, Auth, RLS) + TypeScript.
@@ -129,8 +188,9 @@ one shape to consume throughout the app, which keeps business logic small and co
   (e.g. "is this the owner?") may exist for early failure or better errors but MUST
   NOT be the only gate.
 - **Data privacy**: No user's data may be readable, writable, or exportable by any
-  other user. This is enforced by RLS and verified by tests that query as user A and
-  assert zero rows of user B.
+  other user. This is enforced by RLS and verified by the manual checklist at
+  `supabase/RLS-VERIFY.md` (decision rationale in
+  `specs/001-expense-tracker/research.md §8`).
 - **Dependencies**: New runtime dependencies require a short justification in the PR
   description. Dev-only tooling (formatter, linter, test runner) is exempt.
 
@@ -141,12 +201,18 @@ one shape to consume throughout the app, which keeps business logic small and co
 - **Specs-first**: Non-trivial work follows the Spec Kit flow — `/speckit.specify` →
   `/speckit.plan` → `/speckit.tasks` → `/speckit.implement`. Drive-by changes outside a
   spec are allowed only for bug fixes and pure refactors.
+- **Tests-first inside each feature**: per Principle VI, within a user-story phase
+  the test task MUST precede its implementation task. If `/speckit.tasks` produces
+  a list where implementation tasks appear before their tests, reorder before running
+  `/speckit.implement`.
 - **Code review**: Every change lands via PR. A PR MUST state (1) what it changes, (2)
-  the constitution principles it touches, and (3) how RLS is preserved if data access
-  is affected.
+  the constitution principles it touches, (3) how RLS is preserved if data access
+  is affected, and (4) for non-exempt changes, which commit or line-range contains
+  the test that failed before the change.
 - **Quality gates before merge**: the formatter passes, the linter passes with zero
-  warnings, `tsc --noEmit` passes, unit/integration tests pass, and any new table has a
-  migration plus RLS policies in the same PR.
+  warnings, `tsc --noEmit` passes, the full unit/integration test suite passes, the
+  Playwright E2E suite passes for affected stories, and any new table has a migration
+  plus RLS policies in the same PR.
 - **Schema changes**: every schema change is a migration file committed with the PR
   that uses it. Regenerated Supabase types are committed in the same PR.
 - **Secrets in logs**: logs MUST NOT contain tokens, service-role keys, password hashes,
@@ -175,11 +241,12 @@ affected templates in `.specify/templates/`.
 
 **Compliance review**: every PR review MUST treat a violation of a MUST clause as a
 blocking issue. Complexity that appears to violate a principle (e.g. a `"use client"`
-page, raw SQL without RLS context, an untyped boundary) MUST be called out and either
-justified in the PR description or removed.
+page, raw SQL without RLS context, an untyped boundary, an implementation commit
+without a preceding test commit) MUST be called out and either justified in the PR
+description or removed.
 
 **Runtime guidance**: day-to-day development guidance for AI assistants and humans
 lives in `CLAUDE.md` and in the current feature's `specs/NNN-*/plan.md`; neither may
 contradict this constitution.
 
-**Version**: 1.0.0 | **Ratified**: 2026-04-23 | **Last Amended**: 2026-04-23
+**Version**: 1.1.0 | **Ratified**: 2026-04-23 | **Last Amended**: 2026-04-24
