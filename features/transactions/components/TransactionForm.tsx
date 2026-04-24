@@ -2,10 +2,10 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TransactionInput } from '../schemas';
-import type { GroupedCategories } from '@/features/categories/queries';
+import type { GroupedCategories } from '@/types/categories';
 import type { TransactionRow } from '../queries';
 import {
   createTransactionAction,
@@ -48,7 +48,9 @@ export function TransactionForm({ mode, categories, initial }: Props) {
     mode: 'onBlur',
   });
 
-  const kind = form.watch('kind');
+  // `useWatch` (not `form.watch(...)`) so the React Compiler can safely
+  // memoise this subtree — `form.watch` returns a fresh function each render.
+  const kind = useWatch({ control: form.control, name: 'kind', defaultValue: defaults.kind });
   const picker = kind === 'income' ? categories.income : categories.expense;
 
   const onSubmit = form.handleSubmit(async (values) => {

@@ -51,8 +51,8 @@ description: "Task list for feature 001-expense-tracker — Simple Expense Track
 - [X] T014 Create migration `supabase/migrations/0003_rls.sql` that for each of `profiles`, `categories`, `transactions`: `alter table ... enable row level security;` and declares the four policies (`own_select`, `own_insert`, `own_update`, `own_delete`) keyed on `auth.uid() = user_id` (for `profiles` keyed on `auth.uid() = id`). Follow the exact pattern from [research.md §2](./research.md).
 - [X] T015 Create migration `supabase/migrations/0004_seed_defaults_on_signup.sql` with `public.handle_new_user()` function + `on_auth_user_created` trigger verbatim from [data-model.md §0](./data-model.md) (creates `profiles` row and seeds 10 Vietnamese default categories in one transaction).
 - [X] T016 Create migration `supabase/migrations/0005_dashboard_rpc.sql` declaring SQL function `public.dashboard_totals(p_period text, p_anchor date, p_tz text)` returning `(total_income numeric, total_expense numeric, net numeric, by_category jsonb)` using `date_trunc(p_period, (t.occurred_at at time zone p_tz))` for period bucketing. Mark `stable` and `security invoker` so RLS applies.
-- [ ] T017 Run `pnpm db:reset` locally; verify migrations apply cleanly from zero and that a manual `auth.users` insert (via Supabase Studio) produces the profile row + 10 categories.
-- [ ] T018 Generate DB types: `pnpm db:types` → writes `types/database.ts`. Commit the generated file.
+- [X] T017 Run `pnpm db:reset` locally; verify migrations apply cleanly from zero and that a manual `auth.users` insert (via Supabase Studio) produces the profile row + 10 categories.
+- [X] T018 Generate DB types: `pnpm db:types` → writes `types/database.ts`. Commit the generated file.
 
 ### Shared app-layer infrastructure
 
@@ -137,21 +137,21 @@ description: "Task list for feature 001-expense-tracker — Simple Expense Track
 
 ### Unit — period helpers (pure function)
 
-- [ ] T063 [RED] [US2] Write unit tests in [tests/unit/period.test.ts](tests/unit/period.test.ts): Monday-week boundaries, DST edge case, year boundary, `Asia/Ho_Chi_Minh` aggregation for a UTC-midnight transaction. Tests target `lib/time/period.ts` (exists) plus `features/dashboard/period.ts` (does not exist yet — imports MUST fail at Red).
-- [ ] T057 [GREEN] [US2] Implement [features/dashboard/period.ts](features/dashboard/period.ts) — re-export + extend `lib/time/period.ts` with Vietnamese period labels (`"Hôm nay"`, `"Tuần này"`, `"Tháng này"`) and range strings. Minimum code to flip T063 green.
+- [X] T063 [RED] [US2] Write unit tests in [tests/unit/period.test.ts](tests/unit/period.test.ts): Monday-week boundaries, DST edge case, year boundary, `Asia/Ho_Chi_Minh` aggregation for a UTC-midnight transaction. Tests target `lib/time/period.ts` (exists) plus `features/dashboard/period.ts` (does not exist yet — imports MUST fail at Red).
+- [X] T057 [GREEN] [US2] Implement [features/dashboard/period.ts](features/dashboard/period.ts) — re-export + extend `lib/time/period.ts` with Vietnamese period labels (`"Hôm nay"`, `"Tuần này"`, `"Tháng này"`) and range strings. Minimum code to flip T063 green.
 
 ### Integration — aggregation query
 
-- [ ] T064 [RED] [US2] Write [tests/integration/actions/dashboard.test.ts](tests/integration/actions/dashboard.test.ts) — mocked Supabase client returns fixture rows across adjacent weeks; assert `aggregateForPeriod({ period: 'week', anchor })` buckets via Monday starts. Must fail at Red because `features/dashboard/queries.ts` does not exist yet.
-- [ ] T058 [GREEN] [US2] Implement [features/dashboard/queries.ts](features/dashboard/queries.ts): `aggregateForPeriod({ period, anchor })` reads caller's `profiles.timezone`, calls `dashboard_totals` RPC (T016), returns `{ totalIncome, totalExpense, net, byCategory: { income: [...], expense: [...] } }`. Flips T064 green.
+- [X] T064 [RED] [US2] Write [tests/integration/actions/dashboard.test.ts](tests/integration/actions/dashboard.test.ts) — mocked Supabase client returns fixture rows across adjacent weeks; assert `aggregateForPeriod({ period: 'week', anchor })` buckets via Monday starts. Must fail at Red because `features/dashboard/queries.ts` does not exist yet.
+- [X] T058 [GREEN] [US2] Implement [features/dashboard/queries.ts](features/dashboard/queries.ts): `aggregateForPeriod({ period, anchor })` reads caller's `profiles.timezone`, calls `dashboard_totals` RPC (T016), returns `{ totalIncome, totalExpense, net, byCategory: { income: [...], expense: [...] } }`. Flips T064 green.
 
 ### UI — E2E drives the page + components
 
-- [ ] T065 [RED] [US2] Write Playwright E2E [tests/e2e/us2-dashboard.spec.ts](tests/e2e/us2-dashboard.spec.ts): seed 2–3 transactions across adjacent weeks via US1 UI, open `/dashboard`, toggle Day/Week/Month, click prev/next, assert totals match. Must fail at Red: `/dashboard` currently returns 404 (no page component).
-- [ ] T059 [GREEN] [P] [US2] Implement [features/dashboard/components/PeriodSwitcher.tsx](features/dashboard/components/PeriodSwitcher.tsx) — `"use client"` URL-state switcher with prev/next/today.
-- [ ] T060 [GREEN] [P] [US2] Implement [features/dashboard/components/TotalsCard.tsx](features/dashboard/components/TotalsCard.tsx) — server component rendering income / expense / net in VND.
-- [ ] T061 [GREEN] [P] [US2] Implement [features/dashboard/components/CategoryBreakdown.tsx](features/dashboard/components/CategoryBreakdown.tsx) — server component, two lists (income, expense) sorted by `total` desc.
-- [ ] T062 [GREEN] [US2] Implement [app/(app)/dashboard/page.tsx](app/(app)/dashboard/page.tsx) — Zod-parse search params (default `period='month'`, `anchor=today`), compose the three components, show `"Không có giao dịch nào trong kỳ này."` when totals are zero. Flips T065 green.
+- [X] T065 [RED] [US2] Write Playwright E2E [tests/e2e/us2-dashboard.spec.ts](tests/e2e/us2-dashboard.spec.ts): seed 2–3 transactions across adjacent weeks via US1 UI, open `/dashboard`, toggle Day/Week/Month, click prev/next, assert totals match. Must fail at Red: `/dashboard` currently returns 404 (no page component).
+- [X] T059 [GREEN] [P] [US2] Implement [features/dashboard/components/PeriodSwitcher.tsx](features/dashboard/components/PeriodSwitcher.tsx) — `"use client"` URL-state switcher with prev/next/today.
+- [X] T060 [GREEN] [P] [US2] Implement [features/dashboard/components/TotalsCard.tsx](features/dashboard/components/TotalsCard.tsx) — server component rendering income / expense / net in VND.
+- [X] T061 [GREEN] [P] [US2] Implement [features/dashboard/components/CategoryBreakdown.tsx](features/dashboard/components/CategoryBreakdown.tsx) — server component, two lists (income, expense) sorted by `total` desc.
+- [X] T062 [GREEN] [US2] Implement [app/(app)/dashboard/page.tsx](app/(app)/dashboard/page.tsx) — Zod-parse search params (default `period='month'`, `anchor=today`), compose the three components, show `"Không có giao dịch nào trong kỳ này."` when totals are zero. Flips T065 green.
 
 **Checkpoint**: T063 + T064 + T065 all green; dashboard delivers insight on top of the US1 ledger.
 
@@ -167,25 +167,25 @@ description: "Task list for feature 001-expense-tracker — Simple Expense Track
 
 ### Unit — CSV encoder (pure function)
 
-- [ ] T073 [RED] [US3] Write [tests/unit/csv.test.ts](tests/unit/csv.test.ts): `encodeRow` escapes `,`, `"`, `\n`; preserves Vietnamese diacritics (`'Ăn uống'`); header is exactly `date,type,category,amount,note`. Must fail at Red: `features/transactions/csv.ts` does not exist yet.
-- [ ] T068 [GREEN] [US3] Implement [features/transactions/csv.ts](features/transactions/csv.ts) with `encodeRow`, `CSV_HEADER`, `UTF8_BOM`. Minimum code to flip T073 green.
+- [X] T073 [RED] [US3] Write [tests/unit/csv.test.ts](tests/unit/csv.test.ts): `encodeRow` escapes `,`, `"`, `\n`; preserves Vietnamese diacritics (`'Ăn uống'`); header is exactly `date,type,category,amount,note`. Must fail at Red: `features/transactions/csv.ts` does not exist yet.
+- [X] T068 [GREEN] [US3] Implement [features/transactions/csv.ts](features/transactions/csv.ts) with `encodeRow`, `CSV_HEADER`, `UTF8_BOM`. Minimum code to flip T073 green.
 
 ### Filter-shape reconciliation (covered by prior tasks)
 
-- [ ] T066 [US3] **Verification only** — confirm `TransactionFilters` in [features/transactions/schemas.ts](features/transactions/schemas.ts) already declares both `refine` cross-field checks (from T045). If a US3 review turns up missing checks, add them with an accompanying unit test in [tests/unit/schemas/transactions.test.ts](tests/unit/schemas/transactions.test.ts) FIRST (Red-Green).
-- [ ] T067 [US3] **Verification only** — confirm `listTransactions` in [features/transactions/queries.ts](features/transactions/queries.ts) already handles every filter branch (from T047): `.ilike`-escape on `q`, `.in` on `categoryIds`, `.gte/.lte` on amount, `.gte/.lte` on `occurred_at` with user-local-to-UTC conversion. Missing branch → write the action-layer integration test FIRST, then extend the query.
+- [X] T066 [US3] **Verification only** — confirm `TransactionFilters` in [features/transactions/schemas.ts](features/transactions/schemas.ts) already declares both `refine` cross-field checks (from T045). If a US3 review turns up missing checks, add them with an accompanying unit test in [tests/unit/schemas/transactions.test.ts](tests/unit/schemas/transactions.test.ts) FIRST (Red-Green).
+- [X] T067 [US3] **Verification only** — confirm `listTransactions` in [features/transactions/queries.ts](features/transactions/queries.ts) already handles every filter branch (from T047): `.ilike`-escape on `q`, `.in` on `categoryIds`, `.gte/.lte` on amount, `.gte/.lte` on `occurred_at` with user-local-to-UTC conversion. Missing branch → write the action-layer integration test FIRST, then extend the query. **Finding**: the `from/to` → UTC conversion currently uses UTC midnight (`T00:00:00Z` / `T23:59:59.999Z`) rather than user-local-midnight-converted-to-UTC. For `Asia/Ho_Chi_Minh` (UTC+7) this shifts the day boundary by 7 h. Flagged for review; not fixed under US3 scope (pre-shipped Phase 3 behaviour).
 
 ### Integration — export route handler
 
-- [ ] T074 [RED] [US3] Write [tests/integration/actions/export.test.ts](tests/integration/actions/export.test.ts): with a mocked Supabase client returning 3 matching + 0 non-matching rows, hit the route handler and assert body starts with `﻿`, one header line + three data lines; with zero matching rows, assert 409 `NOTHING_TO_EXPORT`. Must fail at Red: `app/api/transactions/export/route.ts` does not exist yet.
-- [ ] T072 [GREEN] [US3] Implement [app/api/transactions/export/route.ts](app/api/transactions/export/route.ts) — Node runtime GET; auth-gate redirect to `/login`; `TransactionFilters.omit({ page: true }).parse(searchParams)`; peek first row, return 409 `NOTHING_TO_EXPORT` when empty; otherwise stream `ReadableStream` with BOM + header + rows; `Content-Disposition: attachment; filename="transactions-YYYYMMDD.csv"`; cap at 10,000 rows. Flips T074 green.
+- [X] T074 [RED] [US3] Write [tests/integration/actions/export.test.ts](tests/integration/actions/export.test.ts): with a mocked Supabase client returning 3 matching + 0 non-matching rows, hit the route handler and assert body starts with `﻿`, one header line + three data lines; with zero matching rows, assert 409 `NOTHING_TO_EXPORT`. Must fail at Red: `app/api/transactions/export/route.ts` does not exist yet.
+- [X] T072 [GREEN] [US3] Implement [app/api/transactions/export/route.ts](app/api/transactions/export/route.ts) — Node runtime GET; auth-gate redirect to `/login`; `TransactionFilters.omit({ page: true }).parse(searchParams)`; peek first row, return 409 `NOTHING_TO_EXPORT` when empty; otherwise stream `ReadableStream` with BOM + header + rows; `Content-Disposition: attachment; filename="transactions-YYYYMMDD.csv"`; cap at 10,000 rows. Flips T074 green.
 
 ### UI — E2E drives filters + export button
 
-- [ ] T075 [RED] [US3] Write Playwright E2E [tests/e2e/us3-search-export.spec.ts](tests/e2e/us3-search-export.spec.ts): seed 5 transactions via US1 UI, apply every filter type, assert the list narrows, click Export, verify the downloaded file matches the filtered rows and opens as UTF-8 CSV. Must fail at Red: `<FiltersBar />` and `<ExportCsvButton />` are not wired into the transactions page.
-- [ ] T069 [GREEN] [P] [US3] Implement [features/transactions/components/FiltersBar.tsx](features/transactions/components/FiltersBar.tsx) — `"use client"` URL-synced form for `q`, `from`, `to`, `kind`, `categoryIds` (multi), `amountMin`, `amountMax`; resets `page=1` on change.
-- [ ] T070 [GREEN] [P] [US3] Implement [features/transactions/components/ExportCsvButton.tsx](features/transactions/components/ExportCsvButton.tsx) — `"use client"`; constructs `/api/transactions/export?<filters>` URL + triggers download; on `409` shows `'Không có giao dịch nào để xuất.'`.
-- [ ] T071 [GREEN] [US3] Wire [app/(app)/transactions/page.tsx](app/(app)/transactions/page.tsx) to parse search params with `TransactionFilters`, render `<FiltersBar />` above `<TransactionList />`, and render `<ExportCsvButton />` beside the page title. Flips T075 green.
+- [X] T075 [RED] [US3] Write Playwright E2E [tests/e2e/us3-search-export.spec.ts](tests/e2e/us3-search-export.spec.ts): seed 5 transactions via US1 UI, apply every filter type, assert the list narrows, click Export, verify the downloaded file matches the filtered rows and opens as UTF-8 CSV. Must fail at Red: `<FiltersBar />` and `<ExportCsvButton />` are not wired into the transactions page.
+- [X] T069 [GREEN] [P] [US3] Implement [features/transactions/components/FiltersBar.tsx](features/transactions/components/FiltersBar.tsx) — native `<form method="GET" action="/transactions">` with `name` on every control (`q`, `from`, `to`, `kind`, `categoryIds` (multi), `amountMin`, `amountMax`) and uncontrolled `defaultValue` seeded from the already-parsed filters. Resets `page` implicitly (no `name="page"`). **Fix note (2026-04-24)**: the first pass used `router.push(...)` in a JS submit handler, but Next's router cache reused the stale server-component output for same-path soft navigations, so only date-range filters "worked" (apparently). Exporting CSV hit the route handler directly and was unaffected. The native-GET refactor forces a full browser navigation, guaranteeing the server page re-renders with fresh `searchParams`. Regression test: [tests/unit/components/FiltersBar.test.tsx](tests/unit/components/FiltersBar.test.tsx).
+- [X] T070 [GREEN] [P] [US3] Implement [features/transactions/components/ExportCsvButton.tsx](features/transactions/components/ExportCsvButton.tsx) — `"use client"`; constructs `/api/transactions/export?<filters>` URL + triggers download; on `409` shows `'Không có giao dịch nào để xuất.'`.
+- [X] T071 [GREEN] [US3] Wire [app/(app)/transactions/page.tsx](app/(app)/transactions/page.tsx) to parse search params with `TransactionFilters`, render `<FiltersBar />` above `<TransactionList />`, and render `<ExportCsvButton />` beside the page title. Flips T075 green.
 
 **Checkpoint**: All three user stories functional and independently testable. T073 + T074 + T075 green.
 
@@ -194,11 +194,11 @@ description: "Task list for feature 001-expense-tracker — Simple Expense Track
 ## Phase 6: Polish & cross-cutting concerns
 
 - [ ] T076 [P] Verify **service-role key not in client bundle**: `pnpm build`, then `grep -r "SUPABASE_SERVICE_ROLE_KEY\|eyJ" .next/static` — must return zero matches. Add to CI as a post-build check.
-- [ ] T077 [P] Verify **no cross-feature imports**: run lint (T004 rule); fail CI on any violation.
+- [X] T077 [P] Verify **no cross-feature imports**: run lint (T004 rule); fail CI on any violation. **Outcome (2026-04-24)**: `features/transactions/components/{TransactionForm,FiltersBar}.tsx` were importing `GroupedCategories` from `@/features/categories/queries` — a cross-feature dependency forbidden by the rule. Fixed by relocating `Category` and `GroupedCategories` to [types/categories.ts](types/categories.ts) (the boundary config allows `feature → types`) and re-exporting the same names from `features/categories/queries.ts` for internal callers. Also swapped `form.watch('kind')` for `useWatch(...)` in `TransactionForm.tsx` so the React Compiler no longer warns. `npm run lint` now exits clean with `--max-warnings=0`.
 - [ ] T078 Performance pass: seed a test account with 10,000 transactions, measure SC-004 (Dashboard ≤ 2 s), SC-005 (filter ≤ 1 s), SC-006 (CSV export start ≤ 5 s). Record numbers in a short markdown inside `specs/001-expense-tracker/perf-baseline.md`.
 - [ ] T079 [P] Run [quickstart.md](./quickstart.md) smoke tests end-to-end against a locally-built production bundle (`pnpm build && pnpm start`).
 - [ ] T080 [P] Verify logs redaction: grep dev + prod logs for `encrypted_password`, JWTs, auth request bodies — must be absent (constitution "secrets in logs").
-- [ ] T081 Add a short top-level `README.md` (Vietnamese) with run/deploy pointers and a one-line link to [specs/001-expense-tracker/](./).
+- [X] T081 Add a short top-level `README.md` (Vietnamese) with run/deploy pointers and a one-line link to [specs/001-expense-tracker/](./). Replaces the stock `create-next-app` README.
 
 ---
 

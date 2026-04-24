@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Expense Tracker
 
-## Getting Started
+Ứng dụng theo dõi thu chi cá nhân, giao diện tiếng Việt, tiền tệ VND.
 
-First, run the development server:
+Stack: **Next.js 16 (App Router) · React 19 · TypeScript · Supabase (Postgres + Auth + RLS) · Zod · Tailwind · date-fns-tz**.
+
+## Chạy cục bộ (local)
+
+Xem hướng dẫn đầy đủ ở [specs/001-expense-tracker/quickstart.md](specs/001-expense-tracker/quickstart.md). Tóm tắt:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+supabase start          # cần Docker Desktop
+supabase db reset       # chạy migrations + seed
+cp .env.example .env.local   # điền key từ output của supabase start
+npm run db:types
+npm run dev             # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Các lệnh thường dùng
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run dev           # dev server
+npm run build         # production build
+npm run start         # serve production build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+npm run lint          # eslint – phải xanh trước khi PR
+npm run typecheck     # tsc --noEmit
+npm test              # vitest (unit + integration)
+npm run test:e2e      # playwright
+npm run test:all      # all of the above
 
-## Learn More
+npm run db:reset      # wipe + re-migrate + re-seed
+npm run db:types      # generate types/database.ts
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Tài liệu đặc tả
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Toàn bộ đặc tả, plan, task breakdown, contracts, và hướng dẫn kiểm thử RLS thủ công nằm trong [specs/001-expense-tracker/](specs/001-expense-tracker/). Đọc theo thứ tự: `plan.md` → `spec.md` → `data-model.md` → `contracts/` → `quickstart.md`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Các nguyên tắc không thể thỏa hiệp (RLS, Server Components, Zod ở biên, TS strict, TDD) được mã hóa ở [.specify/memory/constitution.md](.specify/memory/constitution.md).
 
-## Deploy on Vercel
+## Triển khai
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Hướng dẫn deploy lên Vercel + Supabase managed ở cuối [quickstart.md](specs/001-expense-tracker/quickstart.md#deploying-to-vercel). Lưu ý: `SUPABASE_SERVICE_ROLE_KEY` chỉ đặt ở env `Production`, không bao giờ ở `Preview`.

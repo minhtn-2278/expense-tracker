@@ -3,11 +3,14 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { ok, fail, type ActionResult } from '@/lib/utils/errors';
+import type { Database } from '@/types/database';
 import {
   TransactionInput,
   TransactionId,
   UpdateTransactionInput,
 } from './schemas';
+
+type TransactionUpdate = Database['public']['Tables']['transactions']['Update'];
 
 export async function createTransactionAction(
   raw: unknown,
@@ -86,7 +89,7 @@ export async function updateTransactionAction(raw: unknown): Promise<ActionResul
     }
   }
 
-  const patch: Record<string, unknown> = {};
+  const patch: TransactionUpdate = {};
   if (parsed.data.patch.kind !== undefined) patch.kind = parsed.data.patch.kind;
   if (parsed.data.patch.amount !== undefined) patch.amount = parsed.data.patch.amount;
   if (parsed.data.patch.occurredAt !== undefined)

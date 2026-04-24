@@ -39,10 +39,13 @@ describe('TransactionInput', () => {
     ).toBe(false);
   });
 
-  it('treats empty-string note as absent', () => {
+  it('accepts empty-string note as a valid zero-length string', () => {
+    // Empty-string → undefined normalisation used to live in the schema via
+    // `.transform`, but that broke RHF input/output type alignment. The
+    // schema now just accepts empty string as-is; the DB column is
+    // nullable + length-capped, so storing '' is harmless.
     const result = TransactionInput.safeParse({ ...validBase, note: '' });
     expect(result.success).toBe(true);
-    expect(result.success && result.data.note).toBeUndefined();
   });
 });
 

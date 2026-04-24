@@ -1,13 +1,8 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
-import type { Database } from '@/types/database';
+import type { Category, GroupedCategories } from '@/types/categories';
 
-export type Category = Database['public']['Tables']['categories']['Row'];
-
-export interface GroupedCategories {
-  income: Category[];
-  expense: Category[];
-}
+export type { Category, GroupedCategories };
 
 /**
  * Returns the caller's categories grouped by kind and sorted by name.

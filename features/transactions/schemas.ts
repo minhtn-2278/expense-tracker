@@ -9,26 +9,25 @@ export type TransactionKind = z.infer<typeof TransactionKind>;
  */
 export const TransactionInput = z.object({
   kind: TransactionKind,
-  amount: z.coerce
+  // `z.number()` (not `z.coerce.number()`) keeps input type == output type so
+  // RHF + zodResolver generics align. RHF supplies a number via
+  // `register('amount', { valueAsNumber: true })`; empty fields become NaN,
+  // which fails `.positive()` with a clear message.
+  amount: z
     .number({ message: 'Số tiền không hợp lệ.' })
     .int({ message: 'Số tiền phải là số nguyên (VND).' })
     .positive({ message: 'Số tiền phải lớn hơn 0.' }),
   occurredAt: z.iso.datetime({ message: 'Thời điểm không hợp lệ.' }),
   categoryId: z.string().uuid({ message: 'Danh mục không hợp lệ.' }),
-  // Empty / whitespace-only note is treated as absent so the DB stores NULL,
-  // not an empty string. Anything else is trimmed and length-capped.
-  note: z.preprocess(
-    (v) => {
-      if (v == null) return undefined;
-      if (typeof v === 'string' && v.trim() === '') return undefined;
-      return v;
-    },
-    z
-      .string()
-      .trim()
-      .max(500, { message: 'Ghi chú tối đa 500 ký tự.' })
-      .optional(),
-  ),
+  // Empty-string note passes validation (length 0 ≤ 500) and is stored as-is.
+  // We intentionally do not coerce '' → undefined in the schema: doing so
+  // would make the Zod input type diverge from the output type and break
+  // RHF + zodResolver generic inference.
+  note: z
+    .string()
+    .trim()
+    .max(500, { message: 'Ghi chú tối đa 500 ký tự.' })
+    .optional(),
 });
 export type TransactionInput = z.infer<typeof TransactionInput>;
 
